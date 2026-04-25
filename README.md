@@ -9,13 +9,13 @@
 
 ## 🇬🇧 English Version
 
+### Description
+**PPRS (Product Price Recording System)** is a specialized inventory and price management system designed for small grocery stores or local shops. It prioritizes simplicity combined with a modern **Premium Glassmorphism** aesthetic to make managing products efficient and visually stunning.
+
 ### 📸 Screenshots
 ![Main Dashboard](screenshots/dashboard.png)
 
 ![Add Product](screenshots/add-product.png)
-
-### Description
-**PPRS (Product Price Recording System)** is a specialized inventory and price management system designed for small grocery stores or local shops. It prioritizes simplicity combined with a modern **Premium Glassmorphism** aesthetic to make managing products efficient and visually stunning.
 
 ### ✨ Key Features
 - **🎨 Premium UI/UX**: Aesthetic Glassmorphism Dark Mode design, modern, and eye-friendly.
@@ -51,13 +51,13 @@
 
 ## 🇹🇭 ภาษาไทย (Thai Version)
 
+### รายละเอียด
+**PPRS (Product Price Recording System)** คือระบบจัดการและจดบันทึกราคาสินค้าที่ออกแบบมาเพื่อร้านค้าขายของชำหรือร้านค้าขนาดเล็กโดยเฉพาะ เน้นความเรียบง่าย แต่มาพร้อมกับดีไซน์ที่ทันสมัยระดับพรีเมียม (**Premium Glassmorphism**) เพื่อให้การจัดการคลังสินค้าเป็นเรื่องง่ายและสวยงาม
+
 ### 📸 ภาพตัวอย่างหน้าจอ
 ![หน้าหลัก](screenshots/dashboard.png)
 
 ![เพิ่มสินค้า](screenshots/add-product.png)
-
-### รายละเอียด
-**PPRS (Product Price Recording System)** คือระบบจัดการและจดบันทึกราคาสินค้าที่ออกแบบมาเพื่อร้านค้าขายของชำหรือร้านค้าขนาดเล็กโดยเฉพาะ เน้นความเรียบง่าย แต่มาพร้อมกับดีไซน์ที่ทันสมัยระดับพรีเมียม (**Premium Glassmorphism**) เพื่อให้การจัดการคลังสินค้าเป็นเรื่องง่ายและสวยงาม
 
 ### ✨ คุณสมบัติเด่น
 - **🎨 Premium UI/UX**: ดีไซน์แบบ Glassmorphism Dark Mode ที่สวยงาม ทันสมัย และสบายตา
