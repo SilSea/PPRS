@@ -6,6 +6,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  unit: string;
   image: string;
 }
 
@@ -62,6 +63,7 @@ export class ProductService {
   public async createProduct(
     name: string,
     price: number,
+    unit: string,
     imageFile: File | null
   ): Promise<Product> {
     const products = await this.getProducts();
@@ -79,6 +81,7 @@ export class ProductService {
       id,
       name,
       price,
+      unit,
       image: imageFilename,
     };
 
@@ -91,6 +94,7 @@ export class ProductService {
     id: string,
     name: string,
     price: number,
+    unit: string,
     imageFile: File | null
   ): Promise<Product | null> {
     const products = await this.getProducts();
@@ -114,6 +118,7 @@ export class ProductService {
       ...existingProduct,
       name,
       price,
+      unit,
       image: imageFilename,
     };
 
