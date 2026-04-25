@@ -40,6 +40,13 @@
    ```
 3. **Access the App**: Open [http://localhost:3000](http://localhost:3000)
 
+### 📸 Screenshots
+![Main Dashboard](screenshots/dashboard.png)
+*Modern Glassmorphism Inventory View*
+
+![Add Product](screenshots/add-product.png)
+*Product Creation with Camera Integration*
+
 ---
 
 <a name="thai"></a>
@@ -76,6 +83,13 @@
    bun run dev
    ```
 3. **เข้าใช้งาน**: เปิดเบราว์เซอร์ไปที่ [http://localhost:3000](http://localhost:3000)
+
+### 📸 ภาพตัวอย่างหน้าจอ
+![หน้าหลัก](screenshots/dashboard.png)
+*มุมมองคลังสินค้าแบบ Glassmorphism*
+
+![เพิ่มสินค้า](screenshots/add-product.png)
+*หน้าเพิ่มสินค้าพร้อมระบบถ่ายภาพ*
 
 ---
 
