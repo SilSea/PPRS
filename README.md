@@ -45,6 +45,13 @@
    ```
 3. **Access the App**: Open [http://localhost:3000](http://localhost:3000)
 
+### 🐳 Docker Support
+If you prefer to run with Docker:
+```bash
+docker build -t pprs-app .
+docker run -p 3000:3000 pprs-app
+```
+
 ---
 
 <a name="thai"></a>
@@ -87,7 +94,12 @@
    ```
 3. **เข้าใช้งาน**: เปิดเบราว์เซอร์ไปที่ [http://localhost:3000](http://localhost:3000)
 
----
+### 🐳 การใช้งานผ่าน Docker
+หากคุณต้องการรันผ่าน Docker:
+```bash
+docker build -t pprs-app .
+docker run -p 3000:3000 pprs-app
+```
 
 ---
 
