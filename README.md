@@ -89,4 +89,8 @@
 
 ---
 
-**Crafted with Precision & Elegance**
+---
+
+**Created by [Nattawut Poolkhet](https://github.com/SilSea)**
+
+&copy; ${new Date().getFullYear()} Nattawut Poolkhet. All rights reserved.

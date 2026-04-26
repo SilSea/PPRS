@@ -43,7 +43,7 @@ const dict = {
     updating: 'กำลังอัปเดต...',
     notFound: 'ไม่พบสินค้า',
     returnHome: 'กลับหน้าแรก',
-    footer: 'ระบบ PPRS สร้างด้วยความปราณีตและหรูหรา',
+    footer: 'ระบบ PPRS โดย Nattawut Poolkhet',
     id: 'รหัส:'
   },
   en: {
@@ -87,7 +87,7 @@ const dict = {
     updating: 'Updating...',
     notFound: 'Product Not Found',
     returnHome: 'Return Home',
-    footer: 'PPRS System. Crafted with Precision & Elegance.',
+    footer: 'PPRS System by Nattawut Poolkhet',
     id: 'ID:'
   }
 };
