@@ -93,4 +93,4 @@
 
 **Created by [Nattawut Poolkhet](https://github.com/SilSea)**
 
-&copy; ${new Date().getFullYear()} Nattawut Poolkhet. All rights reserved.
+&copy; 2026 Nattawut Poolkhet. All rights reserved.
