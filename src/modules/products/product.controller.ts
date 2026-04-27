@@ -582,7 +582,8 @@ export const productController = new Elysia({ prefix: "" })
       (image && typeof image === 'object' && image.size > 0) ? image : null
     );
     
-    set.redirect = "/";
+    set.status = 302;
+    set.headers['Location'] = '/';
   }, {
     body: t.Object({
       name: t.String({ minLength: 1 }),
@@ -673,7 +674,8 @@ export const productController = new Elysia({ prefix: "" })
       (image && typeof image === 'object' && image.size > 0) ? image : null
     );
     
-    set.redirect = "/";
+    set.status = 302;
+    set.headers['Location'] = '/';
   }, {
     body: t.Object({
       name: t.String({ minLength: 1 }),
@@ -684,5 +686,6 @@ export const productController = new Elysia({ prefix: "" })
   })
   .post("/delete/:id", async ({ params, set }) => {
     await productService.deleteProduct(params.id);
-    set.redirect = "/";
+    set.status = 302;
+    set.headers['Location'] = '/';
   });
