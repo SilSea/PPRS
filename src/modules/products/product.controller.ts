@@ -98,6 +98,41 @@ const getLang = (req: Request): Lang => {
   return match ? match[1] as Lang : 'th';
 };
 
+const escapeHtml = (str: string): string => {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
+const renderProductCard = (p: any, t: any) => `
+  <div class="product-card glass-premium rounded-3xl overflow-hidden hover:-translate-y-3 hover:border-indigo-400/50 transition-all duration-500 group" data-name="${escapeHtml(p.name).toLowerCase()}" data-id="${escapeHtml(p.id).toLowerCase()}">
+    <div class="h-56 relative bg-black/40 flex items-center justify-center overflow-hidden border-b border-white/5">
+      ${p.image ? `<img src="/public/images/${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />` : `<div class="italic text-slate-600 font-medium">${t.noImgUp}</div>`}
+      
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      <div class="absolute top-4 right-4 flex flex-col gap-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" style="transition-delay: 0.1s;">
+        <a href="/edit/${escapeHtml(p.id)}" class="bg-indigo-500/80 hover:bg-indigo-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+        </a>
+        <form id="delete-form-${escapeHtml(p.id)}" action="/delete/${escapeHtml(p.id)}" method="POST" class="hidden"></form>
+        <button type="button" onclick="confirmDelete('${escapeHtml(p.id)}')" class="bg-rose-500/80 hover:bg-rose-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div class="p-6 relative">
+      <div class="absolute -top-6 left-6 bg-slate-800 text-slate-300 text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">${t.id} ${escapeHtml(p.id)}</div>
+      <h3 class="text-xl font-bold text-white mb-3 truncate mt-1" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h3>
+      <p class="text-3xl font-black bg-gradient-to-br from-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">฿${p.price.toLocaleString('th-TH')}<span class="text-base text-slate-400 font-medium ml-1">${p.unit === 'kg' ? t.perKg : t.perPiece}</span></p>
+    </div>
+  </div>
+`;
+
 // A utility to wrap HTML content with layout
 const layout = (title: string, content: string, lang: Lang) => {
   const t = dict[lang];
@@ -225,6 +260,13 @@ const layout = (title: string, content: string, lang: Lang) => {
             document.getElementById('delete-form-' + id).submit();
           }
         });
+      }
+
+      function showLoading(form, text) {
+        const btn = form.querySelector('#submit-btn');
+        if (!btn) return;
+        btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span class="ml-2">' + text + '</span>';
+        btn.classList.add('opacity-80', 'cursor-not-allowed');
       }
 
       // Live Search Logic
@@ -450,30 +492,7 @@ export const productController = new Elysia({ prefix: "" })
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         ${products.length === 0 ? `<div id="empty-state" class="col-span-full flex flex-col items-center justify-center py-20 glass-premium rounded-3xl text-center"><div class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-4"><svg class="w-10 h-10 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div><h3 class="text-xl font-bold text-white mb-2">${t.noProd}</h3><p class="text-slate-400">${t.noProdDesc}</p></div>` : ''}
         <div id="dynamic-empty-state" class="hidden col-span-full flex flex-col items-center justify-center py-20 glass-premium rounded-3xl text-center"><h3 class="text-xl font-bold text-white mb-2">${t.noMatch}</h3><p class="text-slate-400">${t.noMatchDesc}</p></div>
-        ${products.map((p, i) => `
-          <div class="product-card glass-premium rounded-3xl overflow-hidden hover:-translate-y-3 hover:border-indigo-400/50 transition-all duration-500 group" data-name="${p.name.toLowerCase().replace(/"/g, '&quot;')}" data-id="${p.id.toLowerCase()}">
-            <div class="h-56 relative bg-black/40 flex items-center justify-center overflow-hidden border-b border-white/5">
-              ${p.image ? `<img src="/public/images/${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />` : `<div class="italic text-slate-600 font-medium">${t.noImgUp}</div>`}
-              
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div class="absolute top-4 right-4 flex flex-col gap-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" style="transition-delay: 0.1s;">
-                <a href="/edit/${p.id}" class="bg-indigo-500/80 hover:bg-indigo-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                </a>
-                <form id="delete-form-${p.id}" action="/delete/${p.id}" method="POST" class="hidden"></form>
-                <button type="button" onclick="confirmDelete('${p.id}')" class="bg-rose-500/80 hover:bg-rose-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </div>
-            <div class="p-6 relative">
-              <div class="absolute -top-6 left-6 bg-slate-800 text-slate-300 text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">${t.id} ${p.id}</div>
-              <h3 class="text-xl font-bold text-white mb-3 truncate mt-1" title="${p.name}">${p.name}</h3>
-              <p class="text-3xl font-black bg-gradient-to-br from-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">฿${p.price.toLocaleString('th-TH')}<span class="text-base text-slate-400 font-medium ml-1">${p.unit === 'kg' ? t.perKg : t.perPiece}</span></p>
-            </div>
-          </div>
-        `).join('')}
+        ${products.map(p => renderProductCard(p, t)).join('')}
       </div>
     `;
     
@@ -496,30 +515,7 @@ export const productController = new Elysia({ prefix: "" })
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         ${products.length === 0 ? `<div class="col-span-full flex flex-col items-center justify-center py-20 glass-premium rounded-3xl text-center"><h3 class="text-xl font-bold text-white mb-2">${t.noMatch}</h3><p class="text-slate-400">${t.noMatchDesc}</p></div>` : ''}
-        ${products.map((p, i) => `
-          <div class="product-card glass-premium rounded-3xl overflow-hidden hover:-translate-y-3 hover:border-indigo-400/50 transition-all duration-500 group" data-name="${p.name.toLowerCase().replace(/"/g, '&quot;')}" data-id="${p.id.toLowerCase()}">
-            <div class="h-56 relative bg-black/40 flex items-center justify-center overflow-hidden border-b border-white/5">
-              ${p.image ? `<img src="/public/images/${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />` : `<div class="italic text-slate-600 font-medium">${t.noImgUp}</div>`}
-              
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              <div class="absolute top-4 right-4 flex flex-col gap-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
-                <a href="/edit/${p.id}" class="bg-indigo-500/80 hover:bg-indigo-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                </a>
-                <form id="delete-form-${p.id}" action="/delete/${p.id}" method="POST" class="hidden"></form>
-                <button type="button" onclick="confirmDelete('${p.id}')" class="bg-rose-500/80 hover:bg-rose-400 backdrop-blur-md text-white p-2.5 rounded-xl transition-colors border border-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.5)]">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </div>
-            <div class="p-6 relative">
-              <div class="absolute -top-6 left-6 bg-slate-800 text-slate-300 text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-lg border border-white/10 shadow-lg">${t.id} ${p.id}</div>
-              <h3 class="text-xl font-bold text-white mb-3 truncate mt-1" title="${p.name}">${p.name}</h3>
-              <p class="text-3xl font-black bg-gradient-to-br from-indigo-300 to-purple-400 bg-clip-text text-transparent drop-shadow-sm">฿${p.price.toLocaleString('th-TH')}<span class="text-base text-slate-400 font-medium ml-1">${p.unit === 'kg' ? t.perKg : t.perPiece}</span></p>
-            </div>
-          </div>
-        `).join('')}
+        ${products.map(p => renderProductCard(p, t)).join('')}
       </div>
     `;
     
@@ -531,7 +527,7 @@ export const productController = new Elysia({ prefix: "" })
     const content = `
       <div class="max-w-2xl mx-auto glass-premium rounded-3xl p-8 sm:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-[fadeIn_0.5s_ease]">
         <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-8">${t.addProd}</h2>
-        <form action="/create" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="showLoading(this)">
+        <form action="/create" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="showLoading(this, '${t.saving}')">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -572,28 +568,28 @@ export const productController = new Elysia({ prefix: "" })
           </div>
         </form>
       </div>
-      <script>
-        function showLoading(form) {
-          const btn = form.querySelector('#submit-btn');
-          btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>${t.saving}</span>';
-          btn.classList.add('opacity-80', 'cursor-not-allowed');
-        }
-      </script>
     `;
     
     return new Response(layout(t.addProd, content, lang), { headers: { "Content-Type": "text/html" } });
   })
-  .post("/create", async ({ body }) => {
+  .post("/create", async ({ body, set }) => {
     const { name, price, unit, image } = body as any;
     
     await productService.createProduct(
       name, 
-      parseFloat(price), 
+      Number(price), 
       unit || 'piece',
       (image && typeof image === 'object' && image.size > 0) ? image : null
     );
     
-    return Response.redirect("/", 302);
+    set.redirect = "/";
+  }, {
+    body: t.Object({
+      name: t.String({ minLength: 1 }),
+      price: t.Numeric({ minimum: 0 }),
+      unit: t.Optional(t.Union([t.Literal('piece'), t.Literal('kg')])),
+      image: t.Optional(t.Any())
+    })
   })
   .get("/edit/:id", async ({ params, set, request }) => {
     const lang = getLang(request);
@@ -610,16 +606,16 @@ export const productController = new Elysia({ prefix: "" })
         <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">${t.editProd}</h2>
           <div class="bg-slate-800/80 px-4 py-2 rounded-xl border border-white/10 font-mono text-sm text-slate-300 shadow-inner">
-            <span class="text-slate-500 font-sans font-medium mr-2">${t.id}</span>${product.id}
+            <span class="text-slate-500 font-sans font-medium mr-2">${t.id}</span>${escapeHtml(product.id)}
           </div>
         </div>
         
-        <form action="/edit/${product.id}" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="showLoading(this)">
+        <form action="/edit/${escapeHtml(product.id)}" method="POST" enctype="multipart/form-data" class="space-y-6" onsubmit="showLoading(this, '${t.updating}')">
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="name" class="block text-sm font-semibold text-slate-300 mb-2">${t.prodName}</label>
-              <input type="text" id="name" name="name" value="${product.name.replace(/"/g, '&quot;')}" required class="w-full bg-slate-900/60 backdrop-blur-sm border border-white/10 text-white rounded-xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all shadow-inner" />
+              <input type="text" id="name" name="name" value="${escapeHtml(product.name)}" required class="w-full bg-slate-900/60 backdrop-blur-sm border border-white/10 text-white rounded-xl px-5 py-3.5 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all shadow-inner" />
             </div>
             
             <div>
@@ -648,7 +644,7 @@ export const productController = new Elysia({ prefix: "" })
           <div class="p-5 bg-black/20 rounded-2xl border border-white/5">
             <label class="block text-sm font-semibold text-slate-300 mb-3">${t.curImg}</label>
             <div class="bg-slate-900/80 rounded-xl p-4 flex justify-center border border-white/5 shadow-inner">
-              ${product.image ? `<img src="/public/images/${product.image}" alt="${product.name}" class="max-h-56 rounded-lg object-contain shadow-lg border border-white/10" />` : `<span class="text-slate-500 italic font-medium py-10">${t.noImg}</span>`}
+              ${product.image ? `<img src="/public/images/${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" class="max-h-56 rounded-lg object-contain shadow-lg border border-white/10" />` : `<span class="text-slate-500 italic font-medium py-10">${t.noImg}</span>`}
             </div>
           </div>
           
@@ -662,31 +658,31 @@ export const productController = new Elysia({ prefix: "" })
           </div>
         </form>
       </div>
-      <script>
-        function showLoading(form) {
-          const btn = form.querySelector('#submit-btn');
-          btn.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>${t.updating}</span>';
-          btn.classList.add('opacity-80', 'cursor-not-allowed');
-        }
-      </script>
     `;
     
     return new Response(layout(t.editProd, content, lang), { headers: { "Content-Type": "text/html" } });
   })
-  .post("/edit/:id", async ({ params, body }) => {
+  .post("/edit/:id", async ({ params, body, set }) => {
     const { name, price, unit, image } = body as any;
     
     await productService.updateProduct(
       params.id,
       name,
-      parseFloat(price),
+      Number(price),
       unit || 'piece',
       (image && typeof image === 'object' && image.size > 0) ? image : null
     );
     
-    return Response.redirect("/", 302);
+    set.redirect = "/";
+  }, {
+    body: t.Object({
+      name: t.String({ minLength: 1 }),
+      price: t.Numeric({ minimum: 0 }),
+      unit: t.Optional(t.Union([t.Literal('piece'), t.Literal('kg')])),
+      image: t.Optional(t.Any())
+    })
   })
-  .post("/delete/:id", async ({ params }) => {
+  .post("/delete/:id", async ({ params, set }) => {
     await productService.deleteProduct(params.id);
-    return Response.redirect("/", 302);
+    set.redirect = "/";
   });

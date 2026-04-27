@@ -14,6 +14,20 @@ const dbPath = path.join(import.meta.dir, "../../data/db.json");
 const publicImagesDir = path.join(process.cwd(), "public/images");
 
 export class ProductService {
+  private lock: Promise<void> = Promise.resolve();
+
+  private async withLock<T>(fn: () => Promise<T>): Promise<T> {
+    let release: () => void;
+    const prev = this.lock;
+    this.lock = new Promise(resolve => { release = resolve; });
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      release!();
+    }
+  }
+
   private async getProducts(): Promise<Product[]> {
     try {
       const f = file(dbPath);
@@ -57,7 +71,9 @@ export class ProductService {
     const hh = pad(now.getHours());
     const min = pad(now.getMinutes());
     const ss = pad(now.getSeconds());
-    return `${yyyy}${mm}${dd}${hh}${min}${ss}`;
+    const ms = now.getMilliseconds().toString().padStart(3, "0");
+    const rand = Math.random().toString(36).substring(2, 6);
+    return `${yyyy}${mm}${dd}${hh}${min}${ss}${ms}${rand}`;
   }
 
   public async createProduct(
@@ -66,28 +82,38 @@ export class ProductService {
     unit: string,
     imageFile: File | null
   ): Promise<Product> {
-    const products = await this.getProducts();
-    const id = this.generateId();
-    let imageFilename = "";
+    return this.withLock(async () => {
+      const products = await this.getProducts();
+      const id = this.generateId();
+      let imageFilename = "";
 
-    if (imageFile && imageFile.size > 0) {
-      const ext = path.extname(imageFile.name) || ".jpg";
-      imageFilename = `${id}${ext}`;
-      const buf = await imageFile.arrayBuffer();
-      await write(path.join(publicImagesDir, imageFilename), buf);
-    }
+      if (imageFile && imageFile.size > 0) {
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+        if (imageFile.size > MAX_IMAGE_SIZE) {
+          throw new Error("Image too large");
+        }
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(imageFile.type)) {
+          throw new Error("Invalid image type");
+        }
+        const ext = path.extname(imageFile.name) || ".jpg";
+        imageFilename = `${id}${ext}`;
+        const buf = await imageFile.arrayBuffer();
+        await write(path.join(publicImagesDir, imageFilename), buf);
+      }
 
-    const newProduct: Product = {
-      id,
-      name,
-      price,
-      unit,
-      image: imageFilename,
-    };
+      const newProduct: Product = {
+        id,
+        name,
+        price,
+        unit,
+        image: imageFilename,
+      };
 
-    products.push(newProduct);
-    await this.saveProducts(products);
-    return newProduct;
+      products.push(newProduct);
+      await this.saveProducts(products);
+      return newProduct;
+    });
   }
 
   public async updateProduct(
@@ -97,54 +123,68 @@ export class ProductService {
     unit: string,
     imageFile: File | null
   ): Promise<Product | null> {
-    const products = await this.getProducts();
-    const index = products.findIndex((p) => p.id === id);
-    
-    if (index === -1) return null;
+    return this.withLock(async () => {
+      const products = await this.getProducts();
+      const index = products.findIndex((p) => p.id === id);
+      
+      if (index === -1) return null;
 
-    const existingProduct = products[index];
-    let imageFilename = existingProduct.image;
+      const existingProduct = products[index];
+      let imageFilename = existingProduct.image;
 
-    // ถ้ามีการอัพโหลดภาพไปก็ทับภาพเดิมชื่อเดิมห้ามแก้รหัสสินค้า
-    if (imageFile && imageFile.size > 0) {
-      const ext = path.extname(imageFile.name) || ".jpg";
-      // ถ้าเดิมมีภาพอยู่แล้ว ให้ใช้ชื่อเดิม หรือถ้าจะให้ชื่อเป็นรหัสเสมอ
-      imageFilename = existingProduct.image ? existingProduct.image : `${id}${ext}`;
-      const buf = await imageFile.arrayBuffer();
-      await write(path.join(publicImagesDir, imageFilename), buf);
-    }
+      if (imageFile && imageFile.size > 0) {
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+        if (imageFile.size > MAX_IMAGE_SIZE) {
+          throw new Error("Image too large");
+        }
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(imageFile.type)) {
+          throw new Error("Invalid image type");
+        }
 
-    products[index] = {
-      ...existingProduct,
-      name,
-      price,
-      unit,
-      image: imageFilename,
-    };
+        if (existingProduct.image) {
+          try {
+            await unlink(path.join(publicImagesDir, existingProduct.image));
+          } catch (e) {}
+        }
 
-    await this.saveProducts(products);
-    return products[index];
+        const ext = path.extname(imageFile.name) || ".jpg";
+        imageFilename = `${id}${ext}`;
+        const buf = await imageFile.arrayBuffer();
+        await write(path.join(publicImagesDir, imageFilename), buf);
+      }
+
+      products[index] = {
+        ...existingProduct,
+        name,
+        price,
+        unit,
+        image: imageFilename,
+      };
+
+      await this.saveProducts(products);
+      return products[index];
+    });
   }
 
   public async deleteProduct(id: string): Promise<boolean> {
-    let products = await this.getProducts();
-    const existingProduct = products.find((p) => p.id === id);
-    
-    if (!existingProduct) return false;
+    return this.withLock(async () => {
+      let products = await this.getProducts();
+      const existingProduct = products.find((p) => p.id === id);
+      
+      if (!existingProduct) return false;
 
-    products = products.filter((p) => p.id !== id);
+      products = products.filter((p) => p.id !== id);
 
-    // ลบไฟล์รูปภาพ
-    if (existingProduct.image) {
-      try {
-        await unlink(path.join(publicImagesDir, existingProduct.image));
-      } catch (e) {
-        // ignore errors if file already deleted
+      if (existingProduct.image) {
+        try {
+          await unlink(path.join(publicImagesDir, existingProduct.image));
+        } catch (e) {}
       }
-    }
 
-    await this.saveProducts(products);
-    return true;
+      await this.saveProducts(products);
+      return true;
+    });
   }
 }
 

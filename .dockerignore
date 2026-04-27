@@ -3,5 +3,5 @@ node_modules
 .gitignore
 README.md
 screenshots
-bun.lockb
+bun.lock
 .env
